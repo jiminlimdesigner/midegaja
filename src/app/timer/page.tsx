@@ -205,45 +205,37 @@ function TimerClientContent() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
         {/* 헤더 */}
-        <div className="text-center mb-8">
-          <h1 className="text-xl font-semibold text-gray-900 mb-1">
-            {searchParams.get('type') || '사고의 전환'}
-          </h1>
-          <p className="text-gray-600">
-            {searchParams.get('subject') || '풍경 그리기'}
-          </p>
-          {isPaused && (
-            <div className="mt-2 inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="card p-6 mb-8">
+          <div className="flex items-center relative">
+            <button
+              onClick={() => router.push('/session-setup')}
+              className="p-3 hover:bg-gray-100 rounded-xl transition-all duration-200 z-10"
+            >
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              이어서 그리기
+            </button>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <h1 className="text-sm font-medium text-gray-700 mb-1 px-2 break-words text-center">
+                {searchParams.get('subject') || '풍경 그리기'}
+              </h1>
+              <p className="text-sm text-gray-500 text-center">
+                {searchParams.get('type') || '사고의 전환'}
+              </p>
+              {isPaused && (
+                <div className="mt-2 inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  이어서 그리기
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* 단계별 팁 영역 */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold mb-2">단계별 팁</h2>
-          <p className="text-sm text-muted-foreground italic">{tipRef.current}</p>
+          </div>
         </div>
 
         {/* 메인 타이머 카드 */}
         <div className="card p-8 mb-6 text-center">
-          {/* 전체 타이머 */}
-          <div className="mb-6">
-            <div className={`text-5xl font-bold font-mono mb-2 ${
-              remainingTime <= 0 ? 'text-red-500' : 'text-gray-900'
-            }`}>
-              {remainingTime <= 0 ? formatTime(overTime) : formatTime(Math.abs(remainingTime))}
-            </div>
-            {remainingTime <= 0 && (
-              <div className="text-lg text-red-500 font-medium">
-                초과 시간
-              </div>
-            )}
-          </div>
-
           {/* 진행률 바 */}
           <div className="mb-6">
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -261,22 +253,98 @@ function TimerClientContent() {
             </div>
           </div>
 
+          {/* 전체 타이머 */}
+          <div className="mb-6">
+            <div className={`text-5xl font-bold font-mono mb-2 ${
+              remainingTime <= 0 ? 'text-red-500' : 'text-gray-900'
+            }`}>
+              {remainingTime <= 0 ? formatTime(overTime) : formatTime(Math.abs(remainingTime))}
+            </div>
+            {remainingTime <= 0 && (
+              <div className="text-lg text-red-500 font-medium">
+                초과 시간
+              </div>
+            )}
+          </div>
+
           {/* 현재 단계 */}
           <div className="mb-6">
-            <div className="text-lg font-medium text-gray-700 mb-1">
-              현재 단계
-            </div>
-            <div className="text-2xl font-bold text-blue-600">
-              {steps[currentStep]}
+            <div className="flex items-center justify-center gap-2">
+              <div className="text-lg font-medium text-gray-700">
+                현재 단계
+              </div>
+              <div className="text-lg font-bold text-blue-600">
+                {steps[currentStep]}
+              </div>
             </div>
             <div className="text-sm text-gray-500 mt-1">
               경과 시간: {formatTimeWithHours(elapsed)}
             </div>
           </div>
+
+          {/* 단계별 팁 영역 */}
+          <div className="flex items-start justify-center gap-1">
+            <span className="text-sm font-medium text-gray-700">Tip.</span>
+            <p className="text-sm text-gray-600 italic">{tipRef.current}</p>
+          </div>
+        </div>
+
+        {/* 단계별 기록 카드 */}
+        <div className="card p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">단계별 진행 상황</h3>
+          <div className="space-y-3">
+            {stepRecords.map((step, idx) => {
+              // 목표 시간(분) 표기
+              const stepGoalMin = Math.round((finalStepTimes[idx] || 0) / 60);
+              const stepLabel = `${step.name} (${stepGoalMin}분 목표)`;
+              if (step.endTime !== undefined) {
+                return (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <div>
+                      <span className="font-medium text-gray-900">{step.name}</span>
+                      <span className="text-sm text-gray-500 ml-2">({stepGoalMin}분 목표)</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-green-600 font-medium">
+                        {formatTimeWithHours(step.endTime)} 완료
+                      </div>
+                      <div className="text-xs text-green-500">
+                        {formatTimeWithHours(step.duration || 0)} 소요
+                      </div>
+                    </div>
+                  </div>
+                );
+              } else if (idx === currentStep) {
+                return (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                    <div>
+                      <span className="font-medium text-gray-900">{step.name}</span>
+                      <span className="text-sm text-gray-500 ml-2">({stepGoalMin}분 목표)</span>
+                    </div>
+                    <span className="text-sm text-blue-600 font-semibold">진행 중</span>
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <span className="font-medium text-gray-500">{step.name}</span>
+                      <span className="text-sm text-gray-400 ml-2">({stepGoalMin}분 목표)</span>
+                    </div>
+                    <span className="text-sm text-gray-400">대기 중</span>
+                  </div>
+                );
+              }
+            })}
+          </div>
         </div>
 
         {/* 버튼 영역 */}
-        <div className="flex gap-3 mb-6">
+        <div className="h-24" />
+      </div>
+      {/* 하단 고정 버튼 */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md mx-auto px-4 pt-2 pb-6 bg-white z-50 border-t border-gray-200">
+        <div className="flex gap-3">
           <button 
             onClick={handlePause}
             className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-medium hover:bg-gray-200 transition-all duration-200"
@@ -293,47 +361,6 @@ function TimerClientContent() {
           >
             {remainingTime <= 0 ? '현재 단계 완료 (시간 초과)' : '현재 단계 완료'}
           </button>
-        </div>
-
-        {/* 단계별 기록 카드 */}
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">단계별 진행 상황</h3>
-          <div className="space-y-3">
-            {stepRecords.map((step, idx) => {
-              // 목표 시간(분) 표기
-              const stepGoalMin = Math.round((finalStepTimes[idx] || 0) / 60);
-              const stepLabel = `${step.name} (${stepGoalMin}분 목표)`;
-              if (step.endTime !== undefined) {
-                return (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="font-medium text-gray-900">{stepLabel}</span>
-                    <div className="text-right">
-                      <div className="text-sm text-green-600 font-medium">
-                        {formatTime(step.endTime)} 완료
-                      </div>
-                      <div className="text-xs text-green-500">
-                        {formatTime(step.duration || 0)} 소요
-                      </div>
-                    </div>
-                  </div>
-                );
-              } else if (idx === currentStep) {
-                return (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
-                    <span className="font-medium text-gray-900">{stepLabel}</span>
-                    <span className="text-sm text-blue-600 font-semibold">진행 중</span>
-                  </div>
-                );
-              } else {
-                return (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium text-gray-500">{stepLabel}</span>
-                    <span className="text-sm text-gray-400">대기 중</span>
-                  </div>
-                );
-              }
-            })}
-          </div>
         </div>
       </div>
     </div>

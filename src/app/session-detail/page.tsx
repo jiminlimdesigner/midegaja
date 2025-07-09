@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import Image from 'next/image';
+import html2canvas from 'html2canvas';
 
 type StepRecord = {
   name: string;
@@ -52,6 +53,7 @@ function SessionDetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
   
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -59,6 +61,7 @@ function SessionDetailContent() {
   const [editingDescription, setEditingDescription] = useState('');
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
     // URL 파라미터에서 데이터 추출
@@ -190,6 +193,54 @@ function SessionDetailContent() {
     router.push(`/timer?${params.toString()}`);
   };
 
+  const handleSavePageAsImage = async () => {
+    if (!pageRef.current || isCapturing) return;
+    
+    setIsCapturing(true);
+    
+    try {
+      // 하단 고정 버튼을 임시로 숨김
+      const fixedButton = document.querySelector('.fixed.bottom-0');
+      if (fixedButton) {
+        (fixedButton as HTMLElement).style.display = 'none';
+      }
+      
+      // 페이지 캡처
+      const canvas = await html2canvas(pageRef.current, {
+        backgroundColor: '#f9fafb', // bg-gray-50
+        scale: 2, // 고해상도
+        useCORS: true,
+        allowTaint: true,
+        scrollX: 0,
+        scrollY: 0,
+        width: pageRef.current.scrollWidth,
+        height: pageRef.current.scrollHeight,
+      });
+      
+      // 캔버스를 이미지로 변환
+      const image = canvas.toDataURL('image/png', 1.0);
+      
+      // 다운로드 링크 생성
+      const link = document.createElement('a');
+      link.download = `${formatDate(sessionData?.startedAt || Date.now())}_${sessionData?.subject}.png`;
+      link.href = image;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error('페이지 캡처 중 오류:', error);
+      alert('페이지 저장 중 오류가 발생했습니다.');
+    } finally {
+      // 하단 고정 버튼 다시 표시
+      const fixedButton = document.querySelector('.fixed.bottom-0');
+      if (fixedButton) {
+        (fixedButton as HTMLElement).style.display = 'block';
+      }
+      setIsCapturing(false);
+    }
+  };
+
   if (!sessionData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -202,7 +253,7 @@ function SessionDetailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4" ref={pageRef}>
       <div className="max-w-md mx-auto">
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-8">
@@ -399,22 +450,26 @@ function SessionDetailContent() {
         </div>
 
         {/* 버튼 영역 */}
+        <div className="h-24" />
+      </div>
+      {/* 하단 고정 버튼 */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md mx-auto px-4 pt-2 pb-6 bg-white z-50 border-t border-gray-200">
         {sessionData.isFinished ? (
-          <div className="space-y-3">
-            <button
-              onClick={handleRestart}
-              className="w-full bg-gray-100 text-gray-700 py-4 px-6 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-all duration-200"
-            >
-              다시 시작할게요
-            </button>
-          </div>
+          <button
+            onClick={handleSavePageAsImage}
+            disabled={isCapturing}
+            className="w-full bg-blue-500 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:bg-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCapturing ? '저장 중...' : '이미지 저장하기'}
+          </button>
         ) : (
           <div className="flex gap-3">
             <button
-              onClick={handleWriteDescription}
-              className="flex-1 py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
+              onClick={handleSavePageAsImage}
+              disabled={isCapturing}
+              className="flex-1 bg-gray-100 text-gray-700 py-4 px-6 rounded-xl font-semibold text-lg hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {savedDescription ? '설명 수정하기' : '설명 작성하기'}
+              {isCapturing ? '저장 중...' : '이미지 저장하기'}
             </button>
             <button
               onClick={handleContinue}
