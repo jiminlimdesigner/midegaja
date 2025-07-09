@@ -56,7 +56,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 `.env.local` 파일을 생성하고 다음 내용을 추가:
 
 ```bash
-NEXT_PUBLIC_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+# 세션 관련 로그용 Webhook URL
+SLACK_WEBHOOK_URL_LOGGER=https://hooks.slack.com/services/YOUR/SESSION/WEBHOOK
+
+# 에러 로그용 Webhook URL
+SLACK_WEBHOOK_URL_ERROR=https://hooks.slack.com/services/YOUR/ERROR/WEBHOOK
 ```
 
 **⚠️ 보안 주의사항:**

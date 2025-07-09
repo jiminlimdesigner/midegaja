@@ -85,10 +85,10 @@ await logUserEventNew.error('TypeError: undefined', 'Timer 페이지', sessionId
 
 ```bash
 # 세션 관련 로그용 Webhook URL
-SLACK_WEBHOOK_SESSION_URL=https://hooks.slack.com/services/YOUR/SESSION/WEBHOOK
+SLACK_WEBHOOK_URL_LOGGER=https://hooks.slack.com/services/YOUR/SESSION/WEBHOOK
 
 # 에러 로그용 Webhook URL
-SLACK_WEBHOOK_ERROR_URL=https://hooks.slack.com/services/YOUR/ERROR/WEBHOOK
+SLACK_WEBHOOK_URL_ERROR=https://hooks.slack.com/services/YOUR/ERROR/WEBHOOK
 ```
 
 ## 변경사항 요약

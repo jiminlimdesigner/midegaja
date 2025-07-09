@@ -22,10 +22,10 @@ export async function POST(request: NextRequest) {
     // 환경변수 디버깅 정보
     console.log('=== Slack API 디버깅 정보 ===');
     console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('SLACK_WEBHOOK_SESSION_URL:', process.env.SLACK_WEBHOOK_SESSION_URL);
-    console.log('SLACK_WEBHOOK_ERROR_URL:', process.env.SLACK_WEBHOOK_ERROR_URL);
-    console.log('SLACK_WEBHOOK_SESSION_URL 존재:', !!process.env.SLACK_WEBHOOK_SESSION_URL);
-    console.log('SLACK_WEBHOOK_ERROR_URL 존재:', !!process.env.SLACK_WEBHOOK_ERROR_URL);
+    console.log('SLACK_WEBHOOK_URL_LOGGER:', process.env.SLACK_WEBHOOK_URL_LOGGER);
+    console.log('SLACK_WEBHOOK_URL_ERROR:', process.env.SLACK_WEBHOOK_URL_ERROR);
+    console.log('SLACK_WEBHOOK_URL_LOGGER 존재:', !!process.env.SLACK_WEBHOOK_URL_LOGGER);
+    console.log('SLACK_WEBHOOK_URL_ERROR 존재:', !!process.env.SLACK_WEBHOOK_URL_ERROR);
     console.log('모든 환경변수 키:', Object.keys(process.env).filter(key => key.includes('SLACK')));
     
     const body = await request.json();
@@ -37,10 +37,10 @@ export async function POST(request: NextRequest) {
     // 채널에 따라 다른 Webhook URL 사용
     let webhookUrl: string | undefined;
     if (channel === '#logger-error') {
-      webhookUrl = process.env.SLACK_WEBHOOK_ERROR_URL;
+      webhookUrl = process.env.SLACK_WEBHOOK_URL_ERROR;
       console.log('에러 채널 Webhook URL 사용');
     } else {
-      webhookUrl = process.env.SLACK_WEBHOOK_SESSION_URL;
+      webhookUrl = process.env.SLACK_WEBHOOK_URL_LOGGER;
       console.log('세션 채널 Webhook URL 사용');
     }
     
