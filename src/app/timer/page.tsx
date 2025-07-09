@@ -296,7 +296,6 @@ function TimerClientContent() {
             {stepRecords.map((step, idx) => {
               // 목표 시간(분) 표기
               const stepGoalMin = Math.round((finalStepTimes[idx] || 0) / 60);
-              const stepLabel = `${step.name} (${stepGoalMin}분 목표)`;
               if (step.endTime !== undefined) {
                 return (
                   <div key={idx} className="flex justify-between items-center p-3 bg-green-50 rounded-lg">

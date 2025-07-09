@@ -134,11 +134,6 @@ function SessionDetailContent() {
     router.back();
   };
 
-  const handleWriteDescription = () => {
-    setEditingDescription(savedDescription);
-    setIsEditingDescription(true);
-  };
-
   const handleSaveDescription = () => {
     setSavedDescription(editingDescription);
     setIsEditingDescription(false);
@@ -162,19 +157,6 @@ function SessionDetailContent() {
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
-  };
-
-  const handleRestart = () => {
-    if (!sessionData) return;
-    
-    // 타이머 페이지로 이동하면서 기존 데이터 전달
-    const params = new URLSearchParams({
-      totalTime: (sessionData.totalTime / 3600).toString(), // 초 → 시간 변환
-      subject: sessionData.subject,
-      type: sessionData.type
-    });
-    
-    router.push(`/timer?${params.toString()}`);
   };
 
   const handleContinue = () => {
