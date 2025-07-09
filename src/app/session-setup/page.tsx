@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { logUserEventNew } from '@/shared/utils/sendToSlack';
 
 export default function SessionSetupPage() {
   const router = useRouter();
@@ -21,6 +22,16 @@ export default function SessionSetupPage() {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }
+    
+    // Slack 로그 전송
+    const totalTimeInMinutes = parseFloat(totalTime) * 60;
+    const stageTimesForLog = {
+      sketch: stageTimes.sketch ? parseFloat(stageTimes.sketch) : undefined,
+      color: stageTimes.color ? parseFloat(stageTimes.color) : undefined,
+      detail: stageTimes.detail ? parseFloat(stageTimes.detail) : undefined,
+      organize: stageTimes.organize ? parseFloat(stageTimes.organize) : undefined,
+    };
+    logUserEventNew.sessionStart(subject, type, totalTimeInMinutes, stageTimesForLog);
     
     const query = new URLSearchParams({
       subject,

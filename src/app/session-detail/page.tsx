@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import Image from 'next/image';
 import html2canvas from 'html2canvas';
+import { logUserEventNew } from '@/shared/utils/sendToSlack';
 
 type StepRecord = {
   name: string;
@@ -203,16 +204,25 @@ function SessionDetailContent() {
       const image = canvas.toDataURL('image/png', 1.0);
       
       // 다운로드 링크 생성
+      const fileName = `${formatDate(sessionData?.startedAt || Date.now())}_${sessionData?.subject}.png`;
       const link = document.createElement('a');
-      link.download = `${formatDate(sessionData?.startedAt || Date.now())}_${sessionData?.subject}.png`;
+      link.download = fileName;
       link.href = image;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
+      // Slack 로그 전송
+      if (sessionData) {
+        logUserEventNew.imageSave(sessionData.subject, fileName);
+      }
+      
     } catch (error) {
       console.error('페이지 캡처 중 오류:', error);
       alert('페이지 저장 중 오류가 발생했습니다.');
+      
+      // 에러 로그 전송
+      logUserEventNew.error(error instanceof Error ? error.message : String(error), '이미지 저장');
     } finally {
       // 하단 고정 버튼 다시 표시
       const fixedButton = document.querySelector('.fixed.bottom-0');

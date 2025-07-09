@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, useRef, Suspense } from 'react';
 import { getStepTip } from '@/shared/utils/tipUtils';
 import { StepType } from '@/shared/data/stepTips';
+import { logUserEventNew } from '@/shared/utils/sendToSlack';
 
 type StepRecord = {
   name: string;
@@ -155,8 +156,22 @@ function TimerClientContent() {
     };
     setStepRecords(updatedRecords);
 
+    // Slack 로그 전송
+    const subject = searchParams.get('subject') || '풍경 그리기';
+    logUserEventNew.stepComplete(steps[currentStep], duration, subject);
+
     if (currentStep === steps.length - 1) {
       setIsFinished(true);
+      // 세션 완료 로그 전송
+      const totalDuration = updatedRecords
+        .filter(step => step.duration)
+        .reduce((acc, step) => acc + (step.duration || 0), 0);
+      const isOvertime = totalDuration > totalTime;
+      const stepRecordsForLog = updatedRecords
+        .filter(step => step.duration)
+        .map(step => ({ name: step.name, duration: step.duration || 0 }));
+      logUserEventNew.sessionComplete(subject, totalDuration, isOvertime, stepRecordsForLog);
+      
       // 업데이트된 stepRecords를 직접 전달
       navigateToSessionDetailWithRecords(true, updatedRecords);
     } else {
@@ -165,6 +180,11 @@ function TimerClientContent() {
   };
 
   const handlePause = () => {
+    // Slack 로그 전송
+    const subject = searchParams.get('subject') || '풍경 그리기';
+    const elapsed = totalTime - remainingTime;
+    logUserEventNew.sessionPause(subject, steps[currentStep], elapsed);
+    
     // 현재 진행 상황을 유지하면서 일시정지
     navigateToSessionDetail(false);
   };
