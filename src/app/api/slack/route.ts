@@ -24,24 +24,41 @@ export async function POST(request: NextRequest) {
     console.log('NODE_ENV:', process.env.NODE_ENV);
     console.log('SLACK_WEBHOOK_URL_LOGGER:', process.env.SLACK_WEBHOOK_URL_LOGGER);
     console.log('SLACK_WEBHOOK_URL_ERROR:', process.env.SLACK_WEBHOOK_URL_ERROR);
-    console.log('SLACK_WEBHOOK_URL_LOGGER 존재:', !!process.env.SLACK_WEBHOOK_URL_LOGGER);
-    console.log('SLACK_WEBHOOK_URL_ERROR 존재:', !!process.env.SLACK_WEBHOOK_URL_ERROR);
+    console.log('SLACK_WEBHOOK_URL_LOGGER_DEV:', process.env.SLACK_WEBHOOK_URL_LOGGER_DEV);
+    console.log('SLACK_WEBHOOK_URL_ERROR_DEV:', process.env.SLACK_WEBHOOK_URL_ERROR_DEV);
     console.log('모든 환경변수 키:', Object.keys(process.env).filter(key => key.includes('SLACK')));
     
     const body = await request.json();
     const { message, options } = body;
 
-    const channel = options?.channel || '#logger-session';
-    console.log('요청된 채널:', channel);
+    // 환경에 따라 기본 채널 결정
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const defaultChannel = isDevelopment ? '#logger-session-dev' : '#logger-session';
+    const channel = options?.channel || defaultChannel;
     
-    // 채널에 따라 다른 Webhook URL 사용
+    console.log('환경:', process.env.NODE_ENV);
+    console.log('요청된 채널:', channel);
+    console.log('기본 채널:', defaultChannel);
+    
+    // 환경과 채널에 따라 다른 Webhook URL 사용
     let webhookUrl: string | undefined;
     if (channel === '#logger-error') {
-      webhookUrl = process.env.SLACK_WEBHOOK_URL_ERROR;
-      console.log('에러 채널 Webhook URL 사용');
-    } else {
+      webhookUrl = isDevelopment 
+        ? process.env.SLACK_WEBHOOK_URL_ERROR_DEV 
+        : process.env.SLACK_WEBHOOK_URL_ERROR;
+      console.log(`${isDevelopment ? '개발' : '실서버'} 에러 채널 Webhook URL 사용`);
+    } else if (channel === '#logger-session') {
       webhookUrl = process.env.SLACK_WEBHOOK_URL_LOGGER;
-      console.log('세션 채널 Webhook URL 사용');
+      console.log('실서버 세션 채널 Webhook URL 사용');
+    } else if (channel === '#logger-session-dev') {
+      webhookUrl = process.env.SLACK_WEBHOOK_URL_LOGGER_DEV;
+      console.log('개발 세션 채널 Webhook URL 사용');
+    } else {
+      // 기본값 (개발 환경에서는 dev 채널로, 실서버에서는 일반 채널로)
+      webhookUrl = isDevelopment 
+        ? process.env.SLACK_WEBHOOK_URL_LOGGER_DEV 
+        : process.env.SLACK_WEBHOOK_URL_LOGGER;
+      console.log(`${isDevelopment ? '개발' : '실서버'} 기본 채널 Webhook URL 사용`);
     }
     
     console.log('선택된 Webhook URL 존재:', !!webhookUrl);
