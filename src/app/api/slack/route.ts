@@ -78,7 +78,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Slack 메시지 전송 중 오류:', error);
     return NextResponse.json(
-      { error: 'Slack 메시지 전송 중 오류가 발생했습니다.' },
+      { 
+        error: 'Slack 메시지 전송 중 오류가 발생했습니다.',
+        details: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
