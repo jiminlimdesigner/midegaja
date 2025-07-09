@@ -56,8 +56,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 `.env.local` 파일을 생성하고 다음 내용을 추가:
 
 ```bash
-NEXT_PUBLIC_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/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
+NEXT_PUBLIC_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ```
+
+**⚠️ 보안 주의사항:**
+- Webhook URL은 절대 GitHub에 커밋하지 마세요
+- `.env.local` 파일은 `.gitignore`에 포함되어 있어야 합니다
+- Webhook URL이 노출되면 즉시 무효화되므로 주의하세요
 
 ### 3. 테스트
 `/test-slack` 페이지에서 Slack 연동을 테스트할 수 있습니다.
