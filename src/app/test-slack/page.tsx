@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { sendTestMessage, logUserEvent, logUserEventNew } from '@/shared/utils/sendToSlack';
+import { sendTestMessage, logUserEventNew } from '@/shared/utils/sendToSlack';
 
 export default function TestSlackPage() {
   const [isLoading, setIsLoading] = useState(false);

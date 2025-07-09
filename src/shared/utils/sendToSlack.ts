@@ -64,21 +64,7 @@ interface SlackBlock {
 }
 
 // Slack Payload 인터페이스
-interface SlackPayload {
-  text?: string;
-  username?: string;
-  icon_emoji?: string;
-  channel?: string;
-  blocks?: SlackBlock[];
-  attachments?: Array<{
-    color: string;
-    fields: Array<{
-      title: string;
-      value: string;
-      short: boolean;
-    }>;
-  }>;
-}
+
 
 /**
  * 사용자 정보를 가져오는 함수
