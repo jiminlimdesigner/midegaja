@@ -17,20 +17,33 @@ interface SlackPayload {
 
 export async function POST(request: NextRequest) {
   try {
+    // 환경변수 디버깅 정보
+    console.log('=== Slack API 디버깅 정보 ===');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('SLACK_WEBHOOK_URL_LOGGER 존재:', !!process.env.SLACK_WEBHOOK_URL_LOGGER);
+    console.log('SLACK_WEBHOOK_URL_ERROR 존재:', !!process.env.SLACK_WEBHOOK_URL_ERROR);
+    console.log('모든 환경변수 키:', Object.keys(process.env).filter(key => key.includes('SLACK')));
+    
     const body = await request.json();
     const { message, options } = body;
 
     const channel = options?.channel || '#logger-session';
+    console.log('요청된 채널:', channel);
     
     // 채널에 따라 다른 Webhook URL 사용
     let webhookUrl: string | undefined;
     if (channel === '#logger-error') {
       webhookUrl = process.env.SLACK_WEBHOOK_URL_ERROR;
+      console.log('에러 채널 Webhook URL 사용');
     } else {
       webhookUrl = process.env.SLACK_WEBHOOK_URL_LOGGER;
+      console.log('세션 채널 Webhook URL 사용');
     }
     
+    console.log('선택된 Webhook URL 존재:', !!webhookUrl);
+    
     if (!webhookUrl) {
+      console.error('Webhook URL이 설정되지 않음');
       return NextResponse.json(
         { error: 'Slack Webhook URL이 설정되지 않았습니다.' },
         { status: 500 }
