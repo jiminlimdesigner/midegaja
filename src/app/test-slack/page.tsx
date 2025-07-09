@@ -126,10 +126,10 @@ export default function TestSlackPage() {
           <div className="p-4 bg-green-50 rounded-lg border border-green-200">
             <h3 className="text-sm font-medium text-green-800 mb-2">환경 변수 설정 완료</h3>
             <p className="text-xs text-green-700">
-              ✅ SLACK_WEBHOOK_SESSION_URL: 서버에서 사용 중
+              ✅ SLACK_WEBHOOK_URL_LOGGER: 서버에서 사용 중
             </p>
             <p className="text-xs text-green-700">
-              ✅ SLACK_WEBHOOK_ERROR_URL: 서버에서 사용 중
+              ✅ SLACK_WEBHOOK_URL_ERROR: 서버에서 사용 중
             </p>
             <p className="text-xs text-green-600 mt-2">
               (클라이언트에서는 보안상 접근할 수 없습니다)

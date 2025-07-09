@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
     // 채널에 따라 다른 Webhook URL 사용
     let webhookUrl: string | undefined;
     if (channel === '#logger-error') {
-      webhookUrl = process.env.SLACK_WEBHOOK_ERROR_URL;
+      webhookUrl = process.env.SLACK_WEBHOOK_URL_ERROR;
     } else {
-      webhookUrl = process.env.SLACK_WEBHOOK_SESSION_URL;
+      webhookUrl = process.env.SLACK_WEBHOOK_URL_LOGGER;
     }
     
     if (!webhookUrl) {
