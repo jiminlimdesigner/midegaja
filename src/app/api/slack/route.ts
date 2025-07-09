@@ -22,6 +22,8 @@ export async function POST(request: NextRequest) {
     // 환경변수 디버깅 정보
     console.log('=== Slack API 디버깅 정보 ===');
     console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('SLACK_WEBHOOK_URL_LOGGER:', process.env.SLACK_WEBHOOK_URL_LOGGER);
+    console.log('SLACK_WEBHOOK_URL_ERROR:', process.env.SLACK_WEBHOOK_URL_ERROR);
     console.log('SLACK_WEBHOOK_URL_LOGGER 존재:', !!process.env.SLACK_WEBHOOK_URL_LOGGER);
     console.log('SLACK_WEBHOOK_URL_ERROR 존재:', !!process.env.SLACK_WEBHOOK_URL_ERROR);
     console.log('모든 환경변수 키:', Object.keys(process.env).filter(key => key.includes('SLACK')));
