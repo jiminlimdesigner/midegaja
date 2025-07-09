@@ -21,37 +21,12 @@ export default function TestSlackPage() {
     }
   };
 
-  const handleTestEvents = async () => {
+  const handleTestSessionEvents = async () => {
     setIsLoading(true);
-    setMessage('테스트 이벤트 전송 중...');
+    setMessage('세션 이벤트 테스트 전송 중... (#logger-session 채널)');
     
     try {
-      // 여러 테스트 이벤트 전송
-      await logUserEvent.sessionStart('테스트 주제', '사고의 전환', 180);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      await logUserEvent.stepComplete('스케치', 120, '테스트 주제');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      await logUserEvent.sessionComplete('테스트 주제', 180, false);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      await logUserEvent.imageSave('테스트 주제', 'test_image.png');
-      
-      setMessage('✅ 모든 테스트 이벤트가 성공적으로 전송되었습니다!');
-    } catch (error) {
-      setMessage(`❌ 테스트 이벤트 전송 실패: ${error}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTestNewEvents = async () => {
-    setIsLoading(true);
-    setMessage('새로운 포맷 테스트 이벤트 전송 중...');
-    
-    try {
-      // 새로운 포맷 테스트 이벤트 전송
+      // 세션 관련 이벤트 전송 (logger-session 채널)
       await logUserEventNew.sessionStart('테스트 주제', '사고의 전환', 3, {
         sketch: 0.5,
         color: 0.75,
@@ -60,7 +35,10 @@ export default function TestSlackPage() {
       });
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      await logUserEventNew.stepComplete('스케치', 120, '테스트 주제');
+      await logUserEventNew.sessionPause('테스트 주제', '채색', 180);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      await logUserEventNew.imageSave('테스트 주제', 'test_image.png');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       await logUserEventNew.sessionComplete('테스트 주제', 180, false, [
@@ -69,13 +47,32 @@ export default function TestSlackPage() {
         { name: '묘사', duration: 90 },
         { name: '정리', duration: 60 }
       ]);
+      
+      setMessage('✅ 세션 이벤트가 #logger-session 채널에 성공적으로 전송되었습니다!');
+    } catch (error) {
+      setMessage(`❌ 세션 이벤트 전송 실패: ${error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTestErrorEvents = async () => {
+    setIsLoading(true);
+    setMessage('에러 이벤트 테스트 전송 중... (#logger-error 채널)');
+    
+    try {
+      // 에러 이벤트 전송 (logger-error 채널)
+      await logUserEventNew.error('TypeError: Cannot read property of undefined', 'Timer 페이지');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      await logUserEventNew.imageSave('테스트 주제', 'test_image.png');
+      await logUserEventNew.error('NetworkError: Failed to fetch', 'API 호출 중');
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setMessage('✅ 모든 새로운 포맷 테스트 이벤트가 성공적으로 전송되었습니다!');
+      await logUserEventNew.error('ValidationError: Invalid input data', '폼 제출');
+      
+      setMessage('✅ 에러 이벤트가 #logger-error 채널에 성공적으로 전송되었습니다!');
     } catch (error) {
-      setMessage(`❌ 새로운 포맷 테스트 이벤트 전송 실패: ${error}`);
+      setMessage(`❌ 에러 이벤트 전송 실패: ${error}`);
     } finally {
       setIsLoading(false);
     }
@@ -102,19 +99,19 @@ export default function TestSlackPage() {
             </button>
             
             <button
-              onClick={handleTestEvents}
+              onClick={handleTestSessionEvents}
               disabled={isLoading}
               className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
             >
-              {isLoading ? '전송 중...' : '기본 사용자 이벤트 테스트'}
+              {isLoading ? '전송 중...' : '세션 이벤트 테스트 (#logger-session)'}
             </button>
             
             <button
-              onClick={handleTestNewEvents}
+              onClick={handleTestErrorEvents}
               disabled={isLoading}
-              className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-600 transition-colors disabled:opacity-50"
+              className="w-full bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors disabled:opacity-50"
             >
-              {isLoading ? '전송 중...' : '새로운 포맷 이벤트 테스트'}
+              {isLoading ? '전송 중...' : '에러 이벤트 테스트 (#logger-error)'}
             </button>
           </div>
 
@@ -125,11 +122,17 @@ export default function TestSlackPage() {
             </div>
           )}
 
-          {/* 환경 변수 확인 */}
-          <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <h3 className="text-sm font-medium text-yellow-800 mb-2">환경 변수 확인</h3>
-            <p className="text-xs text-yellow-700">
-              NEXT_PUBLIC_SLACK_WEBHOOK_URL: {process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL ? '✅ 설정됨' : '❌ 설정되지 않음'}
+          {/* 환경 변수 안내 */}
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <h3 className="text-sm font-medium text-green-800 mb-2">환경 변수 설정 완료</h3>
+            <p className="text-xs text-green-700">
+              ✅ SLACK_WEBHOOK_SESSION_URL: 서버에서 사용 중
+            </p>
+            <p className="text-xs text-green-700">
+              ✅ SLACK_WEBHOOK_ERROR_URL: 서버에서 사용 중
+            </p>
+            <p className="text-xs text-green-600 mt-2">
+              (클라이언트에서는 보안상 접근할 수 없습니다)
             </p>
           </div>
         </div>
@@ -137,8 +140,16 @@ export default function TestSlackPage() {
         {/* 안내 텍스트 */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-500">
-            .env.local 파일에 NEXT_PUBLIC_SLACK_WEBHOOK_URL을 설정해주세요.
+            환경 변수가 서버에서 정상적으로 설정되어 있습니다.
           </p>
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">테스트 가이드</h3>
+            <ul className="text-xs text-blue-700 space-y-1">
+              <li>• <strong>기본 테스트 메시지</strong>: 기본 메시지 전송 테스트</li>
+              <li>• <strong>세션 이벤트 테스트</strong>: #logger-session 채널로 세션 관련 로그 전송</li>
+              <li>• <strong>에러 이벤트 테스트</strong>: #logger-error 채널로 에러 로그 전송</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

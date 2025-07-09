@@ -147,31 +147,26 @@ export const sendToSlack = async (
   message: string, 
   options: Partial<SlackMessage> = {}
 ): Promise<void> => {
-  const webhookUrl = process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL;
-  
-  if (!webhookUrl) {
-    console.warn('Slack Webhook URL이 설정되지 않았습니다.');
-    return;
-  }
-
   try {
-    const payload: SlackPayload = {
-      text: message,
-      username: options.username || '미대가자 봇',
-      icon_emoji: options.icon_emoji || ':art:',
-      channel: options.channel || '#실시간-채널'
-    };
-
-    const response = await fetch(webhookUrl, {
+    const response = await fetch('/api/slack', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ 
+        message, 
+        options: {
+          ...options,
+          username: options.username || '미대가자쌤',
+          icon_emoji: options.icon_emoji || ':art:',
+          channel: options.channel || '#logger-session'
+        }
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`Slack 전송 실패: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Slack 전송 실패: ${response.status}`);
     }
 
     console.log('Slack 메시지 전송 성공:', message);
@@ -194,13 +189,6 @@ export const sendRichSlackMessage = async (
   },
   options: Partial<SlackMessage> = {}
 ): Promise<void> => {
-  const webhookUrl = process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL;
-  
-  if (!webhookUrl) {
-    console.warn('Slack Webhook URL이 설정되지 않았습니다.');
-    return;
-  }
-
   try {
     const userInfo = metadata?.userInfo || getUserInfo();
     const sessionInfo = metadata?.sessionInfo;
@@ -243,28 +231,31 @@ export const sendRichSlackMessage = async (
       })));
     }
 
-    const payload: SlackPayload = {
-      username: options.username || '미대가자 봇',
-      icon_emoji: options.icon_emoji || ':art:',
-      channel: options.channel || '#실시간-채널',
-      attachments: [
-        {
-          color: '#36a64f', // 초록색
-          fields: fields
-        }
-      ]
-    };
-
-    const response = await fetch(webhookUrl, {
+    const response = await fetch('/api/slack', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+              body: JSON.stringify({
+          message: `${title}\n${content}`,
+          options: {
+            ...options,
+            username: options.username || '미대가자쌤',
+            icon_emoji: options.icon_emoji || ':art:',
+            channel: options.channel || '#logger-session',
+            attachments: [
+              {
+                color: '#36a64f', // 초록색
+                fields: fields
+              }
+            ]
+          }
+        }),
     });
 
     if (!response.ok) {
-      throw new Error(`Slack 전송 실패: ${response.status} ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Slack 전송 실패: ${response.status}`);
     }
 
     console.log('Slack Rich 메시지 전송 성공:', title);
@@ -280,148 +271,154 @@ export const logUserEvent = {
   // 세션 시작
   sessionStart: async (subject: string, type: string, totalTime: number) => {
     const message = `🎨 *세션 시작*\n• 주제: ${subject}\n• 유형: ${type}\n• 총 시간: ${Math.round(totalTime / 60)}분`;
-    await sendToSlack(message);
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
   // 단계 완료
   stepComplete: async (stepName: string, duration: number, subject: string) => {
-    const message = `✅ *단계 완료*\n• 단계: ${stepName}\n• 소요 시간: ${Math.round(duration / 60)}분\n• 주제: ${subject}`;
-    await sendToSlack(message);
+    const message = `✅ *${stepName} 단계 완료*\n• 단계: ${stepName}\n• 소요 시간: ${Math.round(duration / 60)}분\n• 주제: ${subject}`;
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
   // 세션 완료
   sessionComplete: async (subject: string, totalDuration: number, isOvertime: boolean) => {
     const status = isOvertime ? '⏰ 시간 초과 완료' : '🎉 정시 완료';
     const message = `${status}\n• 주제: ${subject}\n• 총 소요 시간: ${Math.round(totalDuration / 60)}분`;
-    await sendToSlack(message);
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
   // 세션 일시정지
   sessionPause: async (subject: string, currentStep: string, elapsedTime: number) => {
     const message = `⏸️ *세션 일시정지*\n• 주제: ${subject}\n• 현재 단계: ${currentStep}\n• 경과 시간: ${Math.round(elapsedTime / 60)}분`;
-    await sendToSlack(message);
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
   // 이미지 저장
   imageSave: async (subject: string, fileName: string) => {
     const message = `💾 *이미지 저장*\n• 주제: ${subject}\n• 파일명: ${fileName}`;
-    await sendToSlack(message);
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
   // 에러 발생
   error: async (error: string, context: string) => {
     const message = `❌ *에러 발생*\n• 컨텍스트: ${context}\n• 에러: ${error}`;
-    await sendToSlack(message);
+    await sendToSlack(message, { channel: '#logger-error' });
   }
+};
+
+// 공통 정보 생성 함수
+const getLogMeta = (sessionId?: string): string => {
+  const user = getUserInfo();
+  const id = sessionId || generateSessionId();
+  const timestamp = formatTime(Date.now());
+  return `세션 ID: ${id}\n디바이스: ${user.device || '알 수 없음'}\n사용자: unknown\n${timestamp}`;
 };
 
 /**
  * 새로운 포맷으로 사용자 이벤트 로그를 전송하는 헬퍼 함수들
  */
 export const logUserEventNew = {
-  // 세션 시작
   sessionStart: async (
     subject: string, 
     type: string, 
     totalTime: number,
     stageTimes?: SessionInfo['stageTimes'],
     startedAt?: number,
-    userInfo?: UserInfo
+    userInfo?: UserInfo,
+    sessionId?: string
   ) => {
-    const sessionId = generateSessionId();
-    const user = userInfo || getUserInfo();
-    const timestamp = startedAt || Date.now();
-    
-    const message = `🟢 *세션 시작*\n📅 ${formatTime(timestamp)}\n📱 디바이스: ${user.device || '알 수 없음'}\n🧑‍🎨 사용자: unknown\n📝 주제: ${subject}\n🎨 유형: ${type}\n⏱ 전체 시간: ${formatDuration(totalTime * 60)}\n📍 설정: ${formatStageTimes(stageTimes)}\n\n🆔 세션 ID: \`${sessionId}\``;
-    
-    await sendToSlack(message);
-    return sessionId;
+    const id = sessionId || generateSessionId();
+    const meta = getLogMeta(id);
+    const stageConfig = formatStageTimes(stageTimes);
+    const message = `🎨 *세션 시작*
+- 주제: ${subject}
+- 유형: ${type}
+- 전체 시간: ${Math.round(totalTime)}분
+- 설정: ${stageConfig}
+
+${meta}`;
+    await sendToSlack(message, { channel: '#logger-session' });
+    return id;
   },
 
-  // 세션 완료
   sessionComplete: async (
     subject: string, 
     totalDuration: number, 
     isOvertime: boolean,
     stepRecords: Array<{ name: string; duration: number }>,
-    sessionId?: string,
-    startedAt?: number,
-    userInfo?: UserInfo
+    sessionId?: string
   ) => {
-    const user = userInfo || getUserInfo();
-    const timestamp = Date.now();
-    const overtimeText = isOvertime ? ` (+${formatDuration(totalDuration - (totalDuration * 0.95))} 초과)` : '';
-    
-    // 단계별 소요 시간 문자열 생성
-    const stepDetails = stepRecords
-      .filter(step => step.duration > 0)
-      .map(step => `- ${step.name}: ${formatDuration(step.duration)}`)
-      .join('\n');
-    
-    const message = `🔴 *세션 종료*\n📅 ${formatTime(timestamp)}\n📱 디바이스: ${user.device || '알 수 없음'}\n🧑‍🎨 사용자: unknown\n📝 주제: ${subject}\n🕓 세션 전체 소요 시간: ${formatDuration(totalDuration)}${overtimeText}\n📍 단계별 소요\n${stepDetails}\n\n🆔 세션 ID: \`${sessionId || 'unknown'}\``;
-    
-    await sendToSlack(message);
+    const overtimeText = isOvertime ? `(+${Math.round((totalDuration - (totalDuration * 0.95)) / 60)}분)` : '';
+    const steps = stepRecords
+      .map(s => `${s.name}: ${Math.round(s.duration / 60)}분`)
+      .join(' / ');
+    const meta = getLogMeta(sessionId);
+    const message = `:black_large_square: *세션 완료*
+- 주제: ${subject}
+- 소요 시간: ${Math.round(totalDuration / 60)}분 ${overtimeText}
+- 단계별 시간: ${steps}
+
+${meta}`;
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
-  // 에러 발생
-  error: async (
-    error: string, 
-    context: string,
-    userInfo?: UserInfo
-  ) => {
-    const user = userInfo || getUserInfo();
-    const timestamp = Date.now();
-    
-    const message = `🚨 *에러 발생!*\n📅 ${formatTime(timestamp)}\n📱 디바이스: ${user.device || '알 수 없음'}\n🧑‍🎨 사용자: unknown (비로그인)\n🧭 위치: ${context}\n🧾 메시지: ${error}`;
-    
-    await sendToSlack(message);
-  },
-
-  // 단계 완료
   stepComplete: async (
     stepName: string, 
     duration: number, 
     subject: string,
-    sessionId?: string,
-    userInfo?: UserInfo
+    sessionId?: string
   ) => {
-    const user = userInfo || getUserInfo();
-    const timestamp = Date.now();
-    
-    const message = `✅ *단계 완료*\n📅 ${formatTime(timestamp)}\n📱 디바이스: ${user.device || '알 수 없음'}\n🧑‍🎨 사용자: unknown\n📝 주제: ${subject}\n🎯 단계: ${stepName}\n⏱ 소요 시간: ${formatDuration(duration)}\n\n🆔 세션 ID: \`${sessionId || 'unknown'}\``;
-    
-    await sendToSlack(message);
+    const meta = getLogMeta(sessionId);
+    const message = `✅ *${stepName} 단계 완료*
+- 주제: ${subject}
+- 소요 시간: ${Math.round(duration / 60)}분
+
+${meta}`;
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
-  // 세션 일시정지
   sessionPause: async (
     subject: string, 
     currentStep: string, 
     elapsedTime: number,
-    sessionId?: string,
-    userInfo?: UserInfo
+    sessionId?: string
   ) => {
-    const user = userInfo || getUserInfo();
-    const timestamp = Date.now();
-    
-    const message = `⏸️ *세션 일시정지*\n📅 ${formatTime(timestamp)}\n📱 디바이스: ${user.device || '알 수 없음'}\n🧑‍🎨 사용자: unknown\n📝 주제: ${subject}\n🎯 현재 단계: ${currentStep}\n⏱ 경과 시간: ${formatDuration(elapsedTime)}\n\n🆔 세션 ID: \`${sessionId || 'unknown'}\``;
-    
-    await sendToSlack(message);
+    const meta = getLogMeta(sessionId);
+    const message = `⏸️ *세션 일시정지*
+- 주제: ${subject}
+- 현재 단계: ${currentStep}
+- 경과 시간: ${Math.round(elapsedTime / 60)}분
+
+${meta}`;
+    await sendToSlack(message, { channel: '#logger-session' });
   },
 
-  // 이미지 저장
   imageSave: async (
     subject: string, 
     fileName: string,
-    sessionId?: string,
-    userInfo?: UserInfo
+    sessionId?: string
   ) => {
-    const user = userInfo || getUserInfo();
-    const timestamp = Date.now();
-    
-    const message = `💾 *이미지 저장*\n📅 ${formatTime(timestamp)}\n📱 디바이스: ${user.device || '알 수 없음'}\n🧑‍🎨 사용자: unknown\n📝 주제: ${subject}\n📁 파일명: ${fileName}\n\n🆔 세션 ID: \`${sessionId || 'unknown'}\``;
-    
-    await sendToSlack(message);
+    const meta = getLogMeta(sessionId);
+    const message = `💾 *이미지 저장*
+- 주제: ${subject}
+- 파일명: ${fileName}
+
+${meta}`;
+    await sendToSlack(message, { channel: '#logger-session' });
+  },
+
+  error: async (
+    error: string, 
+    context: string,
+    sessionId?: string
+  ) => {
+    const meta = getLogMeta(sessionId);
+    const message = `🚨 *에러 발생!*
+- 위치: ${context}
+- 메시지: ${error}
+
+${meta}`;
+    await sendToSlack(message, { channel: '#logger-error' });
   }
 };
 
