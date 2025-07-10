@@ -128,7 +128,8 @@ export const sendToSlack = async (
           ...options,
           username: options.username || '미대가자쌤',
           icon_emoji: options.icon_emoji || ':art:',
-          channel: options.channel || '#logger-session'
+          // 채널을 지정하지 않으면 API에서 환경에 따라 자동으로 결정
+          channel: options.channel
         }
       }),
     });
@@ -211,7 +212,8 @@ export const sendRichSlackMessage = async (
             ...options,
             username: options.username || '미대가자쌤',
             icon_emoji: options.icon_emoji || ':art:',
-            channel: options.channel || '#logger-session',
+            // 채널을 지정하지 않으면 API에서 환경에 따라 자동으로 결정
+            channel: options.channel,
             attachments: [
               {
                 color: '#36a64f', // 초록색
