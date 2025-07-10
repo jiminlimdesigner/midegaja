@@ -78,8 +78,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* 파비콘: SVG, PNG, ICO 모두 명시 */}
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        {/* 파비콘: PNG, ICO만 명시 (SVG는 사용하지 않음) */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="icon" href="/favicon.ico" />
