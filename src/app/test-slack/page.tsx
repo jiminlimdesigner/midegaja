@@ -23,10 +23,10 @@ export default function TestSlackPage() {
 
   const handleTestSessionEvents = async () => {
     setIsLoading(true);
-    setMessage('세션 이벤트 테스트 전송 중... (#logger-session 채널)');
+    setMessage('세션 이벤트 테스트 전송 중... (환경에 따라 자동 선택)');
     
     try {
-      // 세션 관련 이벤트 전송 (logger-session 채널)
+      // 세션 관련 이벤트 전송 (채널 미지정으로 환경에 따라 자동 선택)
       await logUserEventNew.sessionStart('테스트 주제', '사고의 전환', 3, {
         sketch: 0.5,
         color: 0.75,
@@ -48,7 +48,7 @@ export default function TestSlackPage() {
         { name: '정리', duration: 60 }
       ]);
       
-      setMessage('✅ 세션 이벤트가 #logger-session 채널에 성공적으로 전송되었습니다!');
+      setMessage('✅ 세션 이벤트가 환경에 맞는 채널에 성공적으로 전송되었습니다!');
     } catch (error) {
       setMessage(`❌ 세션 이벤트 전송 실패: ${error}`);
     } finally {
@@ -103,7 +103,7 @@ export default function TestSlackPage() {
               disabled={isLoading}
               className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
             >
-              {isLoading ? '전송 중...' : '세션 이벤트 테스트 (#logger-session)'}
+              {isLoading ? '전송 중...' : '세션 이벤트 테스트 (환경별 자동 선택)'}
             </button>
             
             <button
@@ -146,7 +146,7 @@ export default function TestSlackPage() {
             <h3 className="text-sm font-medium text-blue-800 mb-2">테스트 가이드</h3>
             <ul className="text-xs text-blue-700 space-y-1">
               <li>• <strong>기본 테스트 메시지</strong>: 기본 메시지 전송 테스트</li>
-              <li>• <strong>세션 이벤트 테스트</strong>: #logger-session 채널로 세션 관련 로그 전송</li>
+              <li>• <strong>세션 이벤트 테스트</strong>: 환경에 따라 자동으로 적절한 채널로 세션 관련 로그 전송</li>
               <li>• <strong>에러 이벤트 테스트</strong>: #logger-error 채널로 에러 로그 전송</li>
             </ul>
           </div>
