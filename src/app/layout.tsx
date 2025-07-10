@@ -78,10 +78,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* 파비콘: PNG, ICO만 명시 (SVG는 사용하지 않음) */}
+        {/* 파비콘: PNG, ICO(새 파일명) 명시 */}
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon-new.ico" />
         
         {/* Apple Touch Icon */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
