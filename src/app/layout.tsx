@@ -78,21 +78,15 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* SVG 파비콘 설정 (최신 브라우저 우선) */}
+        {/* 파비콘: SVG, PNG, ICO 모두 명시 */}
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        
-        {/* 기존 파비콘 설정 (폴백용) */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" href="/favicon.ico" />
         
         {/* Apple Touch Icon */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        
-        {/* Android Chrome */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         
         {/* Windows Tile */}
         <meta name="msapplication-TileColor" content="#ffffff" />
