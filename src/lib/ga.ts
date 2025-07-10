@@ -2,16 +2,16 @@
 
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
-    dataLayer: any[];
+    gtag: (...args: unknown[]) => void;
+    dataLayer: unknown[];
   }
 }
 
 // GA4 측정 ID
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
-// GTM ID
-const GTM_ID = 'GTM-PWMJ9BQD';
+// GTM ID (현재 사용하지 않음, 향후 확장용)
+// const GTM_ID = 'GTM-PWMJ9BQD';
 
 // GA4 초기화
 export const initGA = () => {
@@ -29,8 +29,8 @@ export const initGA = () => {
 
     // gtag 함수 초기화
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function() {
-      window.dataLayer.push(arguments);
+    window.gtag = function(...args: unknown[]) {
+      window.dataLayer.push(args);
     };
 
     // GA4 초기화
@@ -54,7 +54,7 @@ export const pageview = (url: string, title?: string) => {
 };
 
 // 사용자 정의 이벤트 전송
-export const logEvent = (eventName: string, parameters?: Record<string, any>) => {
+export const logEvent = (eventName: string, parameters?: Record<string, unknown>) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', eventName, parameters);
   }
