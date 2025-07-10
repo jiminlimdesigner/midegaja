@@ -1,3 +1,12 @@
+// GA4 이벤트 로깅 import
+import { 
+  logSessionStart as logGASessionStart, 
+  logSessionComplete as logGASessionComplete, 
+  logStepComplete as logGAStepComplete, 
+  logImageSave as logGAImageSave, 
+  logError as logGAError 
+} from '@/lib/ga';
+
 // 세션 ID 생성 함수
 const generateSessionId = (): string => {
   const timestamp = Date.now().toString(36);
@@ -399,4 +408,79 @@ ${meta}`;
 export const sendTestMessage = async (): Promise<void> => {
   const message = `🧪 *테스트 메시지*\n• 시간: ${new Date().toLocaleString('ko-KR')}\n• 미대가자 서비스가 정상적으로 작동 중입니다.`;
   await sendToSlack(message);
+};
+
+// GA4 이벤트 로깅 함수들 (Slack과 함께 사용)
+export const logUserEventWithGA = {
+  sessionStart: async (
+    subject: string, 
+    type: string, 
+    totalTime: number,
+    stageTimes?: SessionInfo['stageTimes'],
+    startedAt?: number,
+    userInfo?: UserInfo,
+    sessionId?: string
+  ) => {
+    // Slack 로깅
+    await logUserEventNew.sessionStart(subject, type, totalTime, stageTimes, startedAt, userInfo, sessionId);
+    // GA4 로깅
+    logGASessionStart(subject, type, totalTime);
+  },
+
+  sessionComplete: async (
+    subject: string, 
+    totalDuration: number, 
+    isOvertime: boolean,
+    stepRecords: Array<{ name: string; duration: number }>,
+    sessionId?: string
+  ) => {
+    // Slack 로깅
+    await logUserEventNew.sessionComplete(subject, totalDuration, isOvertime, stepRecords, sessionId);
+    // GA4 로깅
+    logGASessionComplete(subject, totalDuration, isOvertime, stepRecords);
+  },
+
+  stepComplete: async (
+    stepName: string, 
+    duration: number, 
+    subject: string,
+    sessionId?: string
+  ) => {
+    // Slack 로깅
+    await logUserEventNew.stepComplete(stepName, duration, subject, sessionId);
+    // GA4 로깅
+    logGAStepComplete(stepName, duration, subject);
+  },
+
+  sessionPause: async (
+    subject: string, 
+    currentStep: string, 
+    elapsedTime: number,
+    sessionId?: string
+  ) => {
+    // Slack 로깅
+    await logUserEventNew.sessionPause(subject, currentStep, elapsedTime, sessionId);
+  },
+
+  imageSave: async (
+    subject: string, 
+    fileName: string,
+    sessionId?: string
+  ) => {
+    // Slack 로깅
+    await logUserEventNew.imageSave(subject, fileName, sessionId);
+    // GA4 로깅
+    logGAImageSave(subject, fileName);
+  },
+
+  error: async (
+    error: string, 
+    context: string,
+    sessionId?: string
+  ) => {
+    // Slack 로깅
+    await logUserEventNew.error(error, context, sessionId);
+    // GA4 로깅
+    logGAError(error, context);
+  }
 }; 
