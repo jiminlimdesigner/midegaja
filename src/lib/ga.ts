@@ -10,6 +10,9 @@ declare global {
 // GA4 측정 ID
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
+// GTM ID
+const GTM_ID = 'GTM-PWMJ9BQD';
+
 // GA4 초기화
 export const initGA = () => {
   if (typeof window !== 'undefined' && GA_ID) {

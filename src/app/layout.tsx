@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { GA4Script } from "@/components/GA4Script";
 import { GA4PageTracker } from "@/components/GA4PageTracker";
+import { GTMScript } from "@/components/GTMScript";
+import { GTMNoScript } from "@/components/GTMNoScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,9 +28,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <GTMScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <GTMNoScript />
         <GA4Script />
         <GA4PageTracker />
         {children}
