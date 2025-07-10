@@ -5,6 +5,7 @@ import { GA4Script } from "@/components/GA4Script";
 import { GA4PageTracker } from "@/components/GA4PageTracker";
 import { GTMScript } from "@/components/GTMScript";
 import { GTMNoScript } from "@/components/GTMNoScript";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,9 @@ export default function RootLayout({
       >
         <GTMNoScript />
         <GA4Script />
-        <GA4PageTracker />
+        <Suspense fallback={null}>
+          <GA4PageTracker />
+        </Suspense>
         {children}
       </body>
     </html>
