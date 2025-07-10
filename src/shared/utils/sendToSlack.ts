@@ -308,7 +308,7 @@ export const logUserEventNew = {
 - 설정: ${stageConfig}
 
 ${meta}`;
-    await sendToSlack(message, { channel: '#logger-session' });
+    await sendToSlack(message);
     return id;
   },
 
@@ -330,7 +330,7 @@ ${meta}`;
 - 단계별 시간: ${steps}
 
 ${meta}`;
-    await sendToSlack(message, { channel: '#logger-session' });
+    await sendToSlack(message);
   },
 
   stepComplete: async (
@@ -345,7 +345,7 @@ ${meta}`;
 - 소요 시간: ${Math.round(duration / 60)}분
 
 ${meta}`;
-    await sendToSlack(message, { channel: '#logger-session' });
+    await sendToSlack(message);
   },
 
   sessionPause: async (
@@ -361,7 +361,7 @@ ${meta}`;
 - 경과 시간: ${Math.round(elapsedTime / 60)}분
 
 ${meta}`;
-    await sendToSlack(message, { channel: '#logger-session' });
+    await sendToSlack(message);
   },
 
   imageSave: async (
@@ -375,7 +375,7 @@ ${meta}`;
 - 파일명: ${fileName}
 
 ${meta}`;
-    await sendToSlack(message, { channel: '#logger-session' });
+    await sendToSlack(message);
   },
 
   error: async (
