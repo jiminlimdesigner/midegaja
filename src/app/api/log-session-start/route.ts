@@ -37,19 +37,19 @@ async function appendToSheet(sheetName: string, values: unknown[]) {
     console.warn('[Google Sheets 적재 실패]', e);
     if (e instanceof Error) {
       console.warn('Error message:', e.message);
-      // @ts-expect-error
+      // @ts-expect-error: Google API 응답 타입이 명확하지 않음
       if (e.response?.data) {
-        // @ts-expect-error
+        // @ts-expect-error: Google API 응답 타입이 명확하지 않음
         console.warn('Error response data:', JSON.stringify(e.response.data));
       }
-      // @ts-expect-error
+      // @ts-expect-error: Google API 에러 코드 타입 불명확
       if (e.code) {
-        // @ts-expect-error
+        // @ts-expect-error: Google API 에러 코드 타입 불명확
         console.warn('Error code:', e.code);
       }
-      // @ts-expect-error
+      // @ts-expect-error: Google API errors 필드 타입 불명확
       if (e.errors) {
-        // @ts-expect-error
+        // @ts-expect-error: Google API errors 필드 타입 불명확
         console.warn('Error errors:', JSON.stringify(e.errors));
       }
     } else {
