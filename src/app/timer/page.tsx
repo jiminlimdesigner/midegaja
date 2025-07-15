@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, useRef, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense, useMemo } from 'react';
 import { getStepTip } from '@/shared/utils/tipUtils';
 import { StepType } from '@/shared/data/stepTips';
 import { logUserEventNew } from '@/shared/utils/sendToSlack';
@@ -38,7 +38,7 @@ function TimerClientContent() {
   const searchParams = useSearchParams();
 
   const totalTime = parseFloat(searchParams.get('totalTime') || '0') * 3600; // 시간 → 초
-  const steps = ['스케치', '채색', '묘사', '정리'];
+  const steps = useMemo(() => ['스케치', '채색', '밑사', '정리'], []);
   const stepKeys = ['sketch', 'color', 'detail', 'organize'];
   // 단계별 시간 파싱 (쿼리 파라미터에서)
   const stepTimesInSeconds = stepKeys.map((key) => {
@@ -140,6 +140,40 @@ function TimerClientContent() {
     }, 1000);
     return () => clearInterval(interval);
   }, [totalTime, startTime, isFinished, isPaused, remainingTime]);
+
+  // 세션 ID: 세션 시작 시 1회 생성, 리렌더에도 유지
+  const sessionIdRef = useRef<string | null>(null);
+  if (sessionIdRef.current === null && typeof window !== 'undefined' && window.crypto) {
+    sessionIdRef.current = crypto.randomUUID();
+  }
+
+  // beforeunload 이탈 추적
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      try {
+        const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+        const sessionId = sessionIdRef.current;
+        if (!userId || !sessionId) return;
+        const currentStepName = steps[currentStep];
+        const elapsedSec = totalTime - remainingTime;
+        const elapsedStr = formatTime(elapsedSec);
+        const payload = {
+          userId,
+          sessionId,
+          currentStep: currentStepName,
+          elapsed: elapsedStr,
+        };
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        navigator.sendBeacon('/api/unexpected-exit', blob);
+      } catch {
+        // 무시
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentStep, remainingTime, totalTime, steps]);
 
   const handleStepComplete = () => {
     const now = Math.floor((Date.now() - startTime) / 1000);

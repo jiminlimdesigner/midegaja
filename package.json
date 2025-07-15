@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "googleapis": "^152.0.0",
     "html2canvas": "^1.4.1",
     "next": "15.3.5",
     "react": "^19.0.0",
