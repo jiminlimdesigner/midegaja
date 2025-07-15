@@ -2,26 +2,59 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
 async function appendToSheet(sheetName: string, values: unknown[]) {
+  // 1. 환경변수 로그
+  const email = process.env.GOOGLE_CLIENT_EMAIL;
+  const key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const spreadsheetId = process.env.SPREADSHEET_ID;
+  console.log('[Google Sheets ENV]', { email, hasKey: !!key, spreadsheetId });
+
   try {
-    const sheetId = process.env.GOOGLE_SHEET_ID;
-    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
-    if (!sheetId || !clientEmail || !privateKey) throw new Error('Google Sheets 인증 정보 누락');
-    privateKey = privateKey.replace(/\\n/g, '\n');
+    // 2. JWT 인증 객체 생성 및 점검
+    if (!email || !key || !spreadsheetId) {
+      throw new Error('Google Sheets 환경변수 누락');
+    }
     const jwt = new google.auth.JWT({
-      email: clientEmail,
-      key: privateKey,
+      email,
+      key,
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
+    // 3. Sheets API 파라미터 점검
     const sheets = google.sheets({ version: 'v4', auth: jwt });
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
+    const params = {
+      spreadsheetId,
       range: `${sheetName}!A1`,
-      valueInputOption: 'USER_ENTERED',
-      requestBody: { values: [values] },
-    });
-  } catch {
-    console.warn('[Google Sheets 적재 실패]');
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [values],
+      },
+    };
+    console.log('[Google Sheets API Params]', params);
+    // 4. API 호출 및 응답 로그
+    const res = await sheets.spreadsheets.values.append(params);
+    console.log('[Google Sheets 적재 성공]', res.status, res.statusText, res.data);
+  } catch (e) {
+    // 5. 에러 구조 상세 출력
+    console.warn('[Google Sheets 적재 실패]', e);
+    if (e instanceof Error) {
+      console.warn('Error message:', e.message);
+      // @ts-expect-error
+      if (e.response?.data) {
+        // @ts-expect-error
+        console.warn('Error response data:', JSON.stringify(e.response.data));
+      }
+      // @ts-expect-error
+      if (e.code) {
+        // @ts-expect-error
+        console.warn('Error code:', e.code);
+      }
+      // @ts-expect-error
+      if (e.errors) {
+        // @ts-expect-error
+        console.warn('Error errors:', JSON.stringify(e.errors));
+      }
+    } else {
+      console.warn('Unknown error type:', JSON.stringify(e));
+    }
   }
 }
 
