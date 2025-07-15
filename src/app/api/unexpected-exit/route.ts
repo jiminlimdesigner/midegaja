@@ -11,12 +11,11 @@ async function appendToSheet(sheetName: string, values: unknown[]) {
     if (!sheetId || !clientEmail || !privateKey) throw new Error('Google Sheets 인증 정보 누락');
     // 환경변수에서 \n → 실제 개행문자로 변환
     privateKey = privateKey.replace(/\\n/g, '\n');
-    const jwt = new google.auth.JWT(
-      clientEmail,
-      undefined,
-      privateKey,
-      ['https://www.googleapis.com/auth/spreadsheets']
-    );
+    const jwt = new google.auth.JWT({
+      email: clientEmail,
+      key: privateKey,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
     const sheets = google.sheets({ version: 'v4', auth: jwt });
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,

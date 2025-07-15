@@ -8,12 +8,11 @@ async function appendToSheet(sheetName: string, values: unknown[]) {
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     if (!sheetId || !clientEmail || !privateKey) throw new Error('Google Sheets 인증 정보 누락');
     privateKey = privateKey.replace(/\\n/g, '\n');
-    const jwt = new google.auth.JWT(
-      clientEmail,
-      undefined,
-      privateKey,
-      ['https://www.googleapis.com/auth/spreadsheets']
-    );
+    const jwt = new google.auth.JWT({
+      email: clientEmail,
+      key: privateKey,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
     const sheets = google.sheets({ version: 'v4', auth: jwt });
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
