@@ -5,8 +5,8 @@ import { google } from 'googleapis';
 
 async function appendToSheet(sheetName: string, values: unknown[]) {
   try {
-    const sheetId = process.env.GOOGLE_SHEET_ID;
-    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const sheetId = process.env.SPREADSHEET_ID;
+    const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
     let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     if (!sheetId || !clientEmail || !privateKey) throw new Error('Google Sheets 인증 정보 누락');
     // 환경변수에서 \n → 실제 개행문자로 변환
@@ -23,8 +23,8 @@ async function appendToSheet(sheetName: string, values: unknown[]) {
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [values] },
     });
-  } catch {
-    console.warn('[Google Sheets 적재 실패]');
+  } catch (e) {
+    console.warn('[Google Sheets 적재 실패]', e);
   }
 }
 

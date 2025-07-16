@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, Suspense, useMemo } from 'react';
 import { getStepTip } from '@/shared/utils/tipUtils';
 import { StepType } from '@/shared/data/stepTips';
 import { logUserEventNew } from '@/shared/utils/sendToSlack';
+import { v4 as uuidv4 } from 'uuid';
 
 type StepRecord = {
   name: string;
@@ -38,7 +39,8 @@ function TimerClientContent() {
   const searchParams = useSearchParams();
 
   const totalTime = parseFloat(searchParams.get('totalTime') || '0') * 3600; // 시간 → 초
-  const steps = useMemo(() => ['스케치', '채색', '밑사', '정리'], []);
+  // 단계 한글명과 영어 key 매핑
+  const steps = useMemo(() => ['스케치', '채색', '묘사', '정리'], []);
   const stepKeys = ['sketch', 'color', 'detail', 'organize'];
   // 단계별 시간 파싱 (쿼리 파라미터에서)
   const stepTimesInSeconds = stepKeys.map((key) => {
@@ -143,15 +145,45 @@ function TimerClientContent() {
 
   // 세션 ID: 세션 시작 시 1회 생성, 리렌더에도 유지
   const sessionIdRef = useRef<string | null>(null);
-  if (sessionIdRef.current === null && typeof window !== 'undefined' && window.crypto) {
-    sessionIdRef.current = crypto.randomUUID();
+  if (sessionIdRef.current === null && typeof window !== 'undefined') {
+    sessionIdRef.current = uuidv4();
   }
+
+  // 타이머 시작 시 /api/log-session-start 호출
+  useEffect(() => {
+    if (!sessionIdRef.current) return;
+    const userId = 'test-user';
+    const sessionId = sessionIdRef.current;
+    const subject = searchParams.get('subject') || '풍경 그리기';
+    const goalTime = searchParams.get('totalTime') || '1';
+    const startedAt = new Date().toISOString();
+    // 최초 1회만 호출
+    let called = false;
+    if (!called) {
+      called = true;
+      fetch('/api/log-session-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          sessionId,
+          subject,
+          goalTime,
+          startedAt,
+        }),
+      }).then(res => {
+        if (!res.ok) throw new Error('log-session-start 실패');
+      }).catch(e => {
+        console.warn('[log-session-start] 호출 실패:', e);
+      });
+    }
+  }, []);
 
   // beforeunload 이탈 추적
   useEffect(() => {
     const handleBeforeUnload = () => {
       try {
-        const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+        const userId = 'test-user'; // 고정
         const sessionId = sessionIdRef.current;
         if (!userId || !sessionId) return;
         const currentStepName = steps[currentStep];
@@ -165,8 +197,8 @@ function TimerClientContent() {
         };
         const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
         navigator.sendBeacon('/api/unexpected-exit', blob);
-      } catch {
-        // 무시
+      } catch (e) {
+        console.warn('[unexpected-exit] 호출 실패:', e);
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -194,6 +226,28 @@ function TimerClientContent() {
     const subject = searchParams.get('subject') || '풍경 그리기';
     logUserEventNew.stepComplete(steps[currentStep], duration, subject);
 
+    // [추가] 단계 완료 시 /api/log-step-complete 호출
+    const userId = 'test-user';
+    const sessionId = sessionIdRef.current;
+    const step = steps[currentStep];
+    const completedAt = new Date().toISOString();
+    const elapsed = formatTime(now); // '00:45:12' 등
+    fetch('/api/log-step-complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        sessionId,
+        step,
+        completedAt,
+        elapsed,
+      }),
+    }).then(res => {
+      if (!res.ok) throw new Error('log-step-complete 실패');
+    }).catch(e => {
+      console.warn('[log-step-complete] 호출 실패:', e);
+    });
+
     if (currentStep === steps.length - 1) {
       setIsFinished(true);
       // 세션 완료 로그 전송
@@ -205,7 +259,25 @@ function TimerClientContent() {
         .filter(step => step.duration)
         .map(step => ({ name: step.name, duration: step.duration || 0 }));
       logUserEventNew.sessionComplete(subject, totalDuration, isOvertime, stepRecordsForLog);
-      
+      // [추가] 세션 종료 시 /api/log-session-end 호출
+      const userId = 'test-user';
+      const sessionId = sessionIdRef.current;
+      const endedAt = new Date().toISOString();
+      const totalElapsed = formatTime(totalDuration); // '03:12:04' 등
+      fetch('/api/log-session-end', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          sessionId,
+          endedAt,
+          totalElapsed,
+        }),
+      }).then(res => {
+        if (!res.ok) throw new Error('log-session-end 실패');
+      }).catch(e => {
+        console.warn('[log-session-end] 호출 실패:', e);
+      });
       // 업데이트된 stepRecords를 직접 전달
       navigateToSessionDetailWithRecords(true, updatedRecords);
     } else {
